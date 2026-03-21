@@ -1,0 +1,18 @@
+## Interface: 120001, 120005
+## Title: ValorianUI
+## Notes: Unified custom textures and layout overrides.
+## SavedVariables: ValorianUIDB
+## Author: Vain Valorian
+## Version: 1.0
+## IconTexture: Interface\AddOns\ValorianUI\Textures\MinimapIcon
+
+init.lua
+core.lua
+options.lua
+unitframes.lua
+infobar.lua
+damagemeter.lua
+statusbars.lua
+orbs.lua
+chat.lua
+tooltips.lua

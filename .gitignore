@@ -1,0 +1,37 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor folders
+.vscode/
+.idea/
+.continue/
+*.sublime-workspace
+*.sublime-project
+
+# Lua Language Server / Linter caches
+.luacheck_cache
+*.log
+
+# Release builds and archives
+*.zip
+*.rar
+*.7z
+/release/
+/build/
+
+# Package managers (if you end up using npm for tooling later)
+node_modules/
+
+# Specific Addon Workspace Folders
+.continue/
+.vscode/
+
+# Ignored Root Files
+CHANGELOG.md
+ValorianUI.code-workspace
