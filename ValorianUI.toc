@@ -3,7 +3,8 @@
 ## Notes: Unified custom textures and layout overrides.
 ## SavedVariables: ValorianUIDB
 ## Author: Vain Valorian
-## Version: 1.0
+## Version: 1.1.9
+## X-Curse-Project-ID: 1483056
 ## IconTexture: Interface\AddOns\ValorianUI\Textures\MinimapIcon
 
 init.lua

@@ -31,7 +31,9 @@ node_modules/
 # Specific Addon Workspace Folders
 .continue/
 .vscode/
+.github/
 
 # Ignored Root Files
 CHANGELOG.md
 ValorianUI.code-workspace
+.gitignore

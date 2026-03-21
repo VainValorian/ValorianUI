@@ -328,9 +328,12 @@ function Core:OnEnable(isInitialLogin, isReloadingUI)
             local function DarkenContainer(container)
                 if container then
                     DarkenFrameTextures(container, 0.4, 0.4, 0.4)
-                    for i = 1, container:GetNumChildren() do
+                    local numChildren = container:GetNumChildren()
+                    for i = numChildren, 1, -1 do
                         local child = select(i, container:GetChildren())
-                        DarkenFrameTextures(child, 0.4, 0.4, 0.4)
+                        if child then
+                            DarkenFrameTextures(child, 0.4, 0.4, 0.4)
+                        end
                     end
                 end
             end
@@ -595,52 +598,55 @@ function Core:OnEnable(isInitialLogin, isReloadingUI)
         end
 
         local function GrabMinimapButtons()
-            for i = 1, Minimap:GetNumChildren() do
+            local numChildren = Minimap:GetNumChildren()
+            for i = numChildren, 1, -1 do
                 local child = select(i, Minimap:GetChildren())
-                local name = child:GetName()
-                if child:IsObjectType("Button") and name and not ignoredButtons[name] then
-                    if not child.isValorianGrabbed then
-                        child.isValorianGrabbed = true
-                        child:SetParent(buttonDrawer)
-                        child:SetFrameLevel(buttonDrawer:GetFrameLevel() + 5)
+                if child then
+                    local name = child:GetName()
+                    if child:IsObjectType("Button") and name and not ignoredButtons[name] then
+                        if not child.isValorianGrabbed then
+                            child.isValorianGrabbed = true
+                            child:SetParent(buttonDrawer)
+                            child:SetFrameLevel(buttonDrawer:GetFrameLevel() + 5)
 
-                        child:SetScript("OnDragStart", nil)
-                        child:SetScript("OnDragStop", nil)
-                        child:SetSize(30, 30)
+                            child:SetScript("OnDragStart", nil)
+                            child:SetScript("OnDragStop", nil)
+                            child:SetSize(30, 30)
 
-                        hooksecurefunc(child, "SetPoint", function(self)
-                            if not self.isValorianPositioning then
-                                UpdateDrawerLayout()
-                            end
-                        end)
+                            hooksecurefunc(child, "SetPoint", function(self)
+                                if not self.isValorianPositioning then
+                                    UpdateDrawerLayout()
+                                end
+                            end)
 
-                        if child:GetNormalTexture() then child:GetNormalTexture():SetAlpha(0) end
-                        if child:GetPushedTexture() then child:GetPushedTexture():SetAlpha(0) end
-                        if child:GetHighlightTexture() then child:GetHighlightTexture():SetAlpha(0) end
+                            if child:GetNormalTexture() then child:GetNormalTexture():SetAlpha(0) end
+                            if child:GetPushedTexture() then child:GetPushedTexture():SetAlpha(0) end
+                            if child:GetHighlightTexture() then child:GetHighlightTexture():SetAlpha(0) end
 
-                        if child.Border then child.Border:SetAlpha(0) end
-                        if child.border then child.border:SetAlpha(0) end
-                        if child.Background then child.Background:SetAlpha(0) end
-                        if child.background then child.background:SetAlpha(0) end
+                            if child.Border then child.Border:SetAlpha(0) end
+                            if child.border then child.border:SetAlpha(0) end
+                            if child.Background then child.Background:SetAlpha(0) end
+                            if child.background then child.background:SetAlpha(0) end
 
-                        for i = 1, child:GetNumRegions() do
-                            local region = select(i, child:GetRegions())
-                            if region:IsObjectType("Texture") then
-                                local tex = region:GetTexture()
-                                local texID = type(tex) == "number" and tex or 0
-                                local texStr = type(tex) == "string" and tex:lower() or ""
+                            for rIdx = 1, child:GetNumRegions() do
+                                local region = select(rIdx, child:GetRegions())
+                                if region and region:IsObjectType("Texture") then
+                                    local tex = region:GetTexture()
+                                    local texID = type(tex) == "number" and tex or 0
+                                    local texStr = type(tex) == "string" and tex:lower() or ""
 
-                                local isBorder = false
-                                if texID == 136430 or texID == 136467 or texID == 136431 or texID == 136432 or texID == 130924 or texID == 136477 or texID == 136468 then isBorder = true end
-                                if string.find(texStr, "border") or string.find(texStr, "minimap%-mask") then isBorder = true end
+                                    local isBorder = false
+                                    if texID == 136430 or texID == 136467 or texID == 136431 or texID == 136432 or texID == 130924 or texID == 136477 or texID == 136468 then isBorder = true end
+                                    if string.find(texStr, "border") or string.find(texStr, "minimap%-mask") then isBorder = true end
 
-                                if isBorder then
-                                    region:SetAlpha(0)
+                                    if isBorder then
+                                        region:SetAlpha(0)
+                                    end
                                 end
                             end
-                        end
 
-                        table.insert(collectedButtons, child)
+                            table.insert(collectedButtons, child)
+                        end
                     end
                 end
             end
@@ -650,23 +656,26 @@ function Core:OnEnable(isInitialLogin, isReloadingUI)
         C_Timer.NewTicker(5, GrabMinimapButtons)
         C_Timer.After(1, GrabMinimapButtons)
     end
-
     -- 3. Run the Tinter independently so native icons always fit the theme
     local function TintMinimapRings()
-        for i = 1, Minimap:GetNumChildren() do
+        local numChildren = Minimap:GetNumChildren()
+        for i = numChildren, 1, -1 do
             local child = select(i, Minimap:GetChildren())
-            local name = child:GetName()
-            if child:IsObjectType("Button") and name and ignoredButtons[name] then
-                if not child.isValorianTinted and not child.isValorianGrabbed then
-                    local iconTex = child.icon or child.Icon or (name and _G[name .. "Icon"])
-                    for rIdx = 1, child:GetNumRegions() do
-                        local region = select(rIdx, child:GetRegions())
-                        if region:IsObjectType("Texture") and region ~= iconTex then
-                            region:SetDesaturated(true)
-                            region:SetVertexColor(0.4, 0.4, 0.4)
+            if child then
+                local name = child:GetName()
+                if child:IsObjectType("Button") and name and ignoredButtons[name] then
+                    if not child.isValorianTinted and not child.isValorianGrabbed then
+                        local iconTex = child.icon or child.Icon or (name and _G[name .. "Icon"])
+                        local numRegions = child:GetNumRegions()
+                        for rIdx = numRegions, 1, -1 do
+                            local region = select(rIdx, child:GetRegions())
+                            if region and region:IsObjectType("Texture") and region ~= iconTex then
+                                region:SetDesaturated(true)
+                                region:SetVertexColor(0.4, 0.4, 0.4)
+                            end
                         end
+                        child.isValorianTinted = true
                     end
-                    child.isValorianTinted = true
                 end
             end
         end
@@ -705,47 +714,50 @@ function Core:OnEnable(isInitialLogin, isReloadingUI)
                 end
 
                 if self.ContentsFrame then
-                    for i = 1, self.ContentsFrame:GetNumChildren() do
+                    local numBlocks = self.ContentsFrame:GetNumChildren()
+                    for i = numBlocks, 1, -1 do
                         local block = select(i, self.ContentsFrame:GetChildren())
-                        if block.HeaderText then AddOutline(block.HeaderText) end
+                        if block then
+                            if block.HeaderText then AddOutline(block.HeaderText) end
 
-                        local function StyleTrackerButton(btn)
-                            if not btn then return end
-                            if btn.Display and btn.Display.Icon then
-                                btn.Display.Icon:SetDesaturated(true)
-                                btn.Display.Icon:SetVertexColor(0.7, 0.7, 0.7)
-                            end
-                            if btn.NormalTexture then
-                                btn.NormalTexture:SetDesaturated(true)
-                                btn.NormalTexture:SetVertexColor(0.5, 0.5, 0.5)
-                            end
-                            if btn.Icon then
-                                btn.Icon:SetDesaturated(true)
-                                btn.Icon:SetVertexColor(0.7, 0.7, 0.7)
-                            end
-                            if btn.icon then
-                                btn.icon:SetDesaturated(true)
-                                btn.icon:SetVertexColor(0.7, 0.7, 0.7)
-                            end
-                        end
-
-                        StyleTrackerButton(block.poiButton)
-                        StyleTrackerButton(block.ItemButton)
-                        StyleTrackerButton(block.RightButton)
-
-                        if block.linesPool then
-                            for line in block.linesPool:EnumerateActive() do
-                                if line.Text then
-                                    if STANDARD_TEXT_FONT then
-                                        line.Text:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
-                                    else
-                                        AddOutline(line.Text)
-                                    end
-                                    line.Text:SetShadowColor(0, 0, 0, 0)
+                            local function StyleTrackerButton(btn)
+                                if not btn then return end
+                                if btn.Display and btn.Display.Icon then
+                                    btn.Display.Icon:SetDesaturated(true)
+                                    btn.Display.Icon:SetVertexColor(0.7, 0.7, 0.7)
                                 end
-                                if line.Icon then
-                                    line.Icon:SetDesaturated(true)
-                                    line.Icon:SetVertexColor(0.7, 0.7, 0.7)
+                                if btn.NormalTexture then
+                                    btn.NormalTexture:SetDesaturated(true)
+                                    btn.NormalTexture:SetVertexColor(0.5, 0.5, 0.5)
+                                end
+                                if btn.Icon then
+                                    btn.Icon:SetDesaturated(true)
+                                    btn.Icon:SetVertexColor(0.7, 0.7, 0.7)
+                                end
+                                if btn.icon then
+                                    btn.icon:SetDesaturated(true)
+                                    btn.icon:SetVertexColor(0.7, 0.7, 0.7)
+                                end
+                            end
+
+                            StyleTrackerButton(block.poiButton)
+                            StyleTrackerButton(block.ItemButton)
+                            StyleTrackerButton(block.RightButton)
+
+                            if block.linesPool then
+                                for line in block.linesPool:EnumerateActive() do
+                                    if line.Text then
+                                        if STANDARD_TEXT_FONT then
+                                            line.Text:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
+                                        else
+                                            AddOutline(line.Text)
+                                        end
+                                        line.Text:SetShadowColor(0, 0, 0, 0)
+                                    end
+                                    if line.Icon then
+                                        line.Icon:SetDesaturated(true)
+                                        line.Icon:SetVertexColor(0.7, 0.7, 0.7)
+                                    end
                                 end
                             end
                         end

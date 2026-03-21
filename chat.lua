@@ -412,7 +412,7 @@ function ChatEngine:OnEnable()
                     rootDescription:CreateTitle(ns.db.chatTabs[self.id].name .. " Settings")
                     rootDescription:CreateButton("Rename Tab",
                         function() StaticPopup_Show("VALUI_RENAME_TAB", nil, nil, self.id) end)
-                    local filterMenu = rootDescription:CreateButton("Message Filters")
+                    local filterMenu = rootDescription:CreateButton("Message Filters", function() end)
                     local filters = ns.db.chatTabs[self.id].filters
 
                     local function AddFilterToggle(label, key, siblingKey)
