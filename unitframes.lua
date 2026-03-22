@@ -1,7 +1,7 @@
 -- ==========================================
 -- VALORIAN UI: CUSTOM UNIT FRAMES ENGINE
 -- ==========================================
-local addonName, ns = ...
+local _, ns = ...
 local UnitFrames = ns.Engine:NewModule("UnitFrames")
 
 local issecretvalue = issecretvalue or function() return false end
@@ -112,7 +112,7 @@ local function CreateValorianUnit(unitType, frameName, point, x, y, width, heigh
 
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
     local barTex = (LSM and LSM:Fetch("statusbar", ns.db.ufHealthTexture or "Minimalist")) or
-    "Interface\\TargetingFrame\\UI-StatusBar"
+        "Interface\\TargetingFrame\\UI-StatusBar"
 
     frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 12 })
     frame:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
@@ -147,13 +147,13 @@ local function CreateValorianUnit(unitType, frameName, point, x, y, width, heigh
 
     local powerBar = CreateFrame("StatusBar", nil, frame)
     powerBar:SetStatusBarTexture((LSM and LSM:Fetch("statusbar", ns.db.ufPowerTexture or "Minimalist")) or
-    "Interface\\TargetingFrame\\UI-StatusBar")
+        "Interface\\TargetingFrame\\UI-StatusBar")
     powerBar:SetMinMaxValues(0, 1)
     powerBar:SetValue(1)
 
     local castBar = CreateFrame("StatusBar", nil, frame, "BackdropTemplate")
     castBar:SetStatusBarTexture((LSM and LSM:Fetch("statusbar", ns.db.ufCastbarTexture or "Minimalist")) or
-    "Interface\\TargetingFrame\\UI-StatusBar")
+        "Interface\\TargetingFrame\\UI-StatusBar")
     castBar:SetBackdropColor(0, 0, 0, 0.8)
     castBar:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
     castBar:Hide()
@@ -326,7 +326,7 @@ function UnitFrames:UpdateAllLayouts()
 
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
     local hTex = (LSM and LSM:Fetch("statusbar", ns.db.ufHealthTexture or "Minimalist")) or
-    "Interface\\TargetingFrame\\UI-StatusBar"
+        "Interface\\TargetingFrame\\UI-StatusBar"
 
     for _, frame in ipairs(ActiveValorianFrames) do
         local u = frame.vUnit
@@ -334,7 +334,7 @@ function UnitFrames:UpdateAllLayouts()
 
         local bTexName, bOffset = GetBorderConfig(u)
         local borderPath = (LSM and LSM:Fetch("border", bTexName or "Blizzard Tooltip")) or
-        "Interface\\Tooltips\\UI-Tooltip-Border"
+            "Interface\\Tooltips\\UI-Tooltip-Border"
         bOffset = bOffset or 2
         local pad = bOffset + 2
 
@@ -400,7 +400,7 @@ function UnitFrames:UpdateAllLayouts()
             local w = isEncounter and encW or (isParty and partyW or (isSmall and (baseW * 0.6) or baseW))
             local h = isEncounter and encH or (isParty and partyH or (isSmall and (baseH * 0.7) or baseH))
             local pSize = isEncounter and (encH - 8) or
-            (isParty and partyPSize or (isSmall and (basePSize * 0.7) or basePSize))
+                (isParty and partyPSize or (isSmall and (basePSize * 0.7) or basePSize))
 
             local maxPSize = h - (pad * 2)
             if pSize > maxPSize then pSize = maxPSize end
@@ -798,12 +798,12 @@ local function SkinNativeCastbar(bar)
         if self.isValorianTexturing then return end
         self.isValorianTexturing = true
         local tex = (LSM and LSM:Fetch("statusbar", ns.db.nativeCastbarTexture or "Minimalist")) or
-        "Interface\\TargetingFrame\\UI-StatusBar"
+            "Interface\\TargetingFrame\\UI-StatusBar"
         self:SetStatusBarTexture(tex)
         self.isValorianTexturing = false
     end)
     local t = (LSM and LSM:Fetch("statusbar", ns.db.nativeCastbarTexture or "Minimalist")) or
-    "Interface\\TargetingFrame\\UI-StatusBar"
+        "Interface\\TargetingFrame\\UI-StatusBar"
     bar:SetStatusBarTexture(t)
 
     if bar.Border then
@@ -903,20 +903,9 @@ local function UpdateFluffIcons(frame)
         end
 
         if frame.LootIcon then
-            local isML = false
-            if GetLootMethod then
-                local lootMethod, mlParty, mlRaid = GetLootMethod()
-                if lootMethod == "master" then
-                    if u == "player" and mlParty == 0 then
-                        isML = true
-                    elseif mlParty and mlParty > 0 and u == "party" .. mlParty then
-                        isML = true
-                    elseif mlRaid and mlRaid > 0 and u == "raid" .. mlRaid then
-                        isML = true
-                    end
-                end
-            end
-            if isML then frame.LootIcon:Show() else frame.LootIcon:Hide() end
+            -- Master Looter was removed from Retail WoW.
+            -- Hiding the icon permanently to maintain Midnight 12.0+ compatibility.
+            frame.LootIcon:Hide()
         end
     else
         frame.LeaderIcon:Hide()
@@ -984,8 +973,12 @@ UpdateUnitAuras = function(frame)
                 btn.cd:Hide()
             end
 
-            if filter == "HARMFUL" then btn:SetBackdropBorderColor(0.8, 0.1, 0.1, 1) else btn:SetBackdropBorderColor(0, 0,
-                    0, 1) end
+            if filter == "HARMFUL" then
+                btn:SetBackdropBorderColor(0.8, 0.1, 0.1, 1)
+            else
+                btn:SetBackdropBorderColor(0, 0,
+                    0, 1)
+            end
 
             btn:ClearAllPoints()
             local xOffset = (auraIndex - 1) * (actualSize + 2)
@@ -1186,8 +1179,10 @@ function UnitFrames:OnInit()
         self.PartyAnchor:SetPoint("LEFT", UIParent, "LEFT", 20, 100)
         MakeDraggable(self.PartyAnchor, "Party Frames Anchor")
         self.PartyFrames = {}
-        for i = 1, 4 do table.insert(self.PartyFrames,
-                CreateValorianUnit("party" .. i, "ValorianUI_Party" .. i, "TOPLEFT", 0, 0, 160, 40)) end
+        for i = 1, 4 do
+            table.insert(self.PartyFrames,
+                CreateValorianUnit("party" .. i, "ValorianUI_Party" .. i, "TOPLEFT", 0, 0, 160, 40))
+        end
     end
 
     if ns.db.showRaidFrames ~= false then
@@ -1196,8 +1191,10 @@ function UnitFrames:OnInit()
         self.RaidAnchor:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, -200)
         MakeDraggable(self.RaidAnchor, "Raid Frames Anchor")
         self.RaidFrames = {}
-        for i = 1, 40 do table.insert(self.RaidFrames,
-                CreateValorianUnit("raid" .. i, "ValorianUI_Raid" .. i, "TOPLEFT", 0, 0, 90, 36)) end
+        for i = 1, 40 do
+            table.insert(self.RaidFrames,
+                CreateValorianUnit("raid" .. i, "ValorianUI_Raid" .. i, "TOPLEFT", 0, 0, 90, 36))
+        end
     end
 
     if ns.db.showBossFrames ~= false then
@@ -1212,11 +1209,15 @@ function UnitFrames:OnInit()
         MakeDraggable(self.ArenaAnchor, "Arena Frames Anchor")
 
         self.BossFrames = {}
-        for i = 1, 5 do table.insert(self.BossFrames,
-                CreateValorianUnit("boss" .. i, "ValorianUI_Boss" .. i, "TOPRIGHT", 0, 0, 180, 45)) end
+        for i = 1, 5 do
+            table.insert(self.BossFrames,
+                CreateValorianUnit("boss" .. i, "ValorianUI_Boss" .. i, "TOPRIGHT", 0, 0, 180, 45))
+        end
         self.ArenaFrames = {}
-        for i = 1, 5 do table.insert(self.ArenaFrames,
-                CreateValorianUnit("arena" .. i, "ValorianUI_Arena" .. i, "TOPRIGHT", 0, 0, 180, 45)) end
+        for i = 1, 5 do
+            table.insert(self.ArenaFrames,
+                CreateValorianUnit("arena" .. i, "ValorianUI_Arena" .. i, "TOPRIGHT", 0, 0, 180, 45))
+        end
     end
 
     for _, name in ipairs(UF_Anchors) do
@@ -1232,8 +1233,9 @@ end
 function UnitFrames:OnEnable()
     self:UpdateAllLayouts()
 
-    if PlayerCastingBarFrame then SkinNativeCastbar(PlayerCastingBarFrame) end
-    if CastingBarFrame then SkinNativeCastbar(CastingBarFrame) end
+    if _G.PlayerCastingBarFrame then SkinNativeCastbar(_G.PlayerCastingBarFrame) end
+    if _G.CastingBarFrame then SkinNativeCastbar(_G.CastingBarFrame) end
+
 
     -- VALORIAN FIX: Master Global Event Watcher (Only for systemic events)
     local GlobalWatcher = CreateFrame("Frame")
@@ -1248,7 +1250,7 @@ function UnitFrames:OnEnable()
     GlobalWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
     GlobalWatcher:RegisterEvent("PLAYER_UPDATE_RESTING")
 
-    GlobalWatcher:SetScript("OnEvent", function(self, event, unit)
+    GlobalWatcher:SetScript("OnEvent", function(_, event, unit)
         if ValUI_UFUnlocked then return end
 
         for _, frame in ipairs(ActiveValorianFrames) do
@@ -1315,7 +1317,7 @@ function UnitFrames:OnEnable()
         SafeRegister("UNIT_THREAT_SITUATION_UPDATE")
         SafeRegister("UNIT_THREAT_LIST_UPDATE")
 
-        unitWatcher:SetScript("OnEvent", function(self, event, unit)
+        unitWatcher:SetScript("OnEvent", function(_, event)
             if ValUI_UFUnlocked then return end
 
             UnitFrames.PendingUpdates[frame] = UnitFrames.PendingUpdates[frame] or {}

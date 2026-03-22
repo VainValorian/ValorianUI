@@ -607,6 +607,7 @@ function Core:OnEnable(isInitialLogin, isReloadingUI)
                         if not child.isValorianGrabbed then
                             child.isValorianGrabbed = true
                             child:SetParent(buttonDrawer)
+                            child:SetFrameStrata(buttonDrawer:GetFrameStrata())
                             child:SetFrameLevel(buttonDrawer:GetFrameLevel() + 5)
 
                             child:SetScript("OnDragStart", nil)
@@ -619,14 +620,12 @@ function Core:OnEnable(isInitialLogin, isReloadingUI)
                                 end
                             end)
 
-                            if child:GetNormalTexture() then child:GetNormalTexture():SetAlpha(0) end
-                            if child:GetPushedTexture() then child:GetPushedTexture():SetAlpha(0) end
-                            if child:GetHighlightTexture() then child:GetHighlightTexture():SetAlpha(0) end
-
                             if child.Border then child.Border:SetAlpha(0) end
                             if child.border then child.border:SetAlpha(0) end
                             if child.Background then child.Background:SetAlpha(0) end
                             if child.background then child.background:SetAlpha(0) end
+
+                            local mainIcon = child.icon or child.Icon or (name and _G[name .. "Icon"])
 
                             for rIdx = 1, child:GetNumRegions() do
                                 local region = select(rIdx, child:GetRegions())
@@ -637,10 +636,18 @@ function Core:OnEnable(isInitialLogin, isReloadingUI)
 
                                     local isBorder = false
                                     if texID == 136430 or texID == 136467 or texID == 136431 or texID == 136432 or texID == 130924 or texID == 136477 or texID == 136468 then isBorder = true end
-                                    if string.find(texStr, "border") or string.find(texStr, "minimap%-mask") then isBorder = true end
+                                    if string.find(texStr, "border") or string.find(texStr, "minimap%-mask") or string.find(texStr, "background") then isBorder = true end
 
                                     if isBorder then
                                         region:SetAlpha(0)
+                                    elseif region == mainIcon or not mainIcon then
+                                        mainIcon = region
+                                        region:SetDesaturated(false)
+                                        region:SetVertexColor(1, 1, 1)
+                                        region:ClearAllPoints()
+                                        region:SetPoint("TOPLEFT", child, "TOPLEFT", 2, -2)
+                                        region:SetPoint("BOTTOMRIGHT", child, "BOTTOMRIGHT", -2, 2)
+                                        region:SetTexCoord(0.1, 0.9, 0.1, 0.9)
                                     end
                                 end
                             end

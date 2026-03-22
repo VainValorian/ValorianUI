@@ -1,7 +1,7 @@
 -- ==========================================
 -- VALORIAN UI: CHAT ENGINE
 -- ==========================================
-local addonName, ns = ...
+local _, ns = ...
 local ChatEngine = ns.Engine:NewModule("ChatEngine")
 
 ns.ChatEngine = ChatEngine
@@ -77,13 +77,13 @@ function ChatEngine:OnEnable()
         if type(frame.SetAlpha) == "function" then frame:SetAlpha(0) end
 
         if not frame.ValUI_Hooked then
-            hooksecurefunc(frame, "SetParent", function(self, parent)
-                if parent ~= ValUI_HiddenChatFrame then self:SetParent(ValUI_HiddenChatFrame) end
+            hooksecurefunc(frame, "SetParent", function(hookedFrame, parent)
+                if parent ~= ValUI_HiddenChatFrame then hookedFrame:SetParent(ValUI_HiddenChatFrame) end
             end)
-            hooksecurefunc(frame, "Show", function(self) self:Hide() end)
+            hooksecurefunc(frame, "Show", function(hookedFrame) hookedFrame:Hide() end)
             if type(frame.SetAlpha) == "function" then
-                hooksecurefunc(frame, "SetAlpha", function(self, alpha)
-                    if alpha > 0 then self:SetAlpha(0) end
+                hooksecurefunc(frame, "SetAlpha", function(hookedFrame, alpha)
+                    if alpha > 0 then hookedFrame:SetAlpha(0) end
                 end)
             end
             frame.ValUI_Hooked = true
@@ -176,14 +176,12 @@ function ChatEngine:OnEnable()
     resizer:GetNormalTexture():SetDesaturated(true)
     resizer:GetNormalTexture():SetAlpha(0.6)
     resizer:SetScript("OnMouseDown",
-        function(self, button) if button == "LeftButton" then chatPanel:StartSizing("BOTTOMRIGHT") end end)
+        function(_, button) if button == "LeftButton" then chatPanel:StartSizing("BOTTOMRIGHT") end end)
     resizer:SetScript("OnMouseUp",
-        function(self, button)
-            chatPanel:StopMovingOrSizing(); local w, h = chatPanel:GetSize(); ValorianUIDB.chatSize = {
-                width = w,
-                height =
-                    h
-            }
+        function()
+            chatPanel:StopMovingOrSizing()
+            local w, h = chatPanel:GetSize()
+            ValorianUIDB.chatSize = { width = w, height = h }
         end)
 
     local jumpBtn = CreateFrame("Button", nil, chatPanel, "BackdropTemplate")
@@ -246,7 +244,7 @@ function ChatEngine:OnEnable()
         end)
 
         scrollFrame:SetHyperlinksEnabled(true)
-        scrollFrame:SetScript("OnHyperlinkEnter", function(selfFrame, linkData, link)
+        scrollFrame:SetScript("OnHyperlinkEnter", function(selfFrame, linkData, _)
             local linkType = string.match(linkData, "^([^:]+)")
             if linkType and (linkType == "item" or linkType == "spell" or linkType == "enchant" or linkType == "quest" or linkType == "talent" or linkType == "achievement" or linkType == "currency" or linkType == "battlepet" or linkType == "mount") then
                 GameTooltip:SetOwner(selfFrame, "ANCHOR_CURSOR")
@@ -338,20 +336,20 @@ function ChatEngine:OnEnable()
         button1 = "Accept",
         button2 = "Cancel",
         hasEditBox = true,
-        OnAccept = function(self, data)
-            local inputFrame = self.EditBox or _G[self:GetName() .. "EditBox"]
+        OnAccept = function(popup, data)
+            local inputFrame = popup.EditBox or _G[popup:GetName() .. "EditBox"]
             local text = inputFrame and inputFrame:GetText() or ""
             if text ~= "" then
                 ns.db.chatTabs[data].name = text; ns.RenderTabs()
             end
         end,
-        EditBoxOnEnterPressed = function(self)
-            local text = self:GetText()
-            local dialogData = self:GetParent().data
+        EditBoxOnEnterPressed = function(eb)
+            local text = eb:GetText()
+            local dialogData = eb:GetParent().data
             if text and text ~= "" then
                 ns.db.chatTabs[dialogData].name = text; ns.RenderTabs()
             end
-            self:GetParent():Hide()
+            eb:GetParent():Hide()
         end,
         timeout = 0,
         whileDead = true,
@@ -404,22 +402,22 @@ function ChatEngine:OnEnable()
             end
         end)
 
-        btn:SetScript("OnClick", function(self, button)
+        btn:SetScript("OnClick", function(clickedBtn, button)
             if button == "LeftButton" then
-                ns.SwitchToTab(self.id)
+                ns.SwitchToTab(clickedBtn.id)
             elseif button == "RightButton" then
-                MenuUtil.CreateContextMenu(self, function(owner, rootDescription)
-                    rootDescription:CreateTitle(ns.db.chatTabs[self.id].name .. " Settings")
+                MenuUtil.CreateContextMenu(clickedBtn, function(_, rootDescription)
+                    rootDescription:CreateTitle(ns.db.chatTabs[clickedBtn.id].name .. " Settings")
                     rootDescription:CreateButton("Rename Tab",
-                        function() StaticPopup_Show("VALUI_RENAME_TAB", nil, nil, self.id) end)
+                        function() StaticPopup_Show("VALUI_RENAME_TAB", nil, nil, clickedBtn.id) end)
                     local filterMenu = rootDescription:CreateButton("Message Filters", function() end)
-                    local filters = ns.db.chatTabs[self.id].filters
+                    local filters = ns.db.chatTabs[clickedBtn.id].filters
 
                     local function AddFilterToggle(label, key, siblingKey)
                         filterMenu:CreateCheckbox(label, function() return filters[key] end, function()
                             filters[key] = not filters[key]
                             if siblingKey then filters[siblingKey] = filters[key] end
-                            if ns.ActiveChatTab == self.id then ns.RefreshChatDisplay() end
+                            if ns.ActiveChatTab == clickedBtn.id then ns.RefreshChatDisplay() end
                         end)
                     end
 
@@ -437,18 +435,18 @@ function ChatEngine:OnEnable()
                     AddFilterToggle("Loot", "LOOT")
                     AddFilterToggle("Currency/Money", "CURRENCY")
 
-                    if self.id > 1 then
+                    if clickedBtn.id > 1 then
                         rootDescription:CreateDivider()
                         rootDescription:CreateButton("|cffFF0000Delete Tab|r", function()
-                            table.remove(ns.db.chatTabs, self.id)
+                            table.remove(ns.db.chatTabs, clickedBtn.id)
 
-                            local frameToDelete = ns.ChatFrames[self.id]
+                            local frameToDelete = ns.ChatFrames[clickedBtn.id]
                             if frameToDelete then frameToDelete:Hide() end
-                            table.remove(ns.ChatFrames, self.id)
+                            table.remove(ns.ChatFrames, clickedBtn.id)
 
-                            local btnToDelete = ns.TabFrames[self.id]
+                            local btnToDelete = ns.TabFrames[clickedBtn.id]
                             if btnToDelete then btnToDelete:Hide() end
-                            table.remove(ns.TabFrames, self.id)
+                            table.remove(ns.TabFrames, clickedBtn.id)
 
                             for i, tBtn in ipairs(ns.TabFrames) do tBtn.id = i end
 
@@ -498,12 +496,12 @@ function ChatEngine:OnEnable()
             ns.AddTabBtn.text:SetText("+")
             ns.AddTabBtn.text:SetTextColor(0.6, 0.6, 0.6)
             ns.AddTabBtn:SetScript("OnEnter",
-                function(self)
-                    self.text:SetTextColor(1, 1, 1); self:SetBackdropColor(0.12, 0.12, 0.12, 0.9)
+                function(addBtn)
+                    addBtn.text:SetTextColor(1, 1, 1); addBtn:SetBackdropColor(0.12, 0.12, 0.12, 0.9)
                 end)
             ns.AddTabBtn:SetScript("OnLeave",
-                function(self)
-                    self.text:SetTextColor(0.6, 0.6, 0.6); self:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
+                function(addBtn)
+                    addBtn.text:SetTextColor(0.6, 0.6, 0.6); addBtn:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
                 end)
             ns.AddTabBtn:SetScript("OnClick", function()
                 if #ns.db.chatTabs < 12 then
@@ -522,7 +520,7 @@ function ChatEngine:OnEnable()
 
     local TabFader = CreateFrame("Frame")
     local currentTabAlpha = 1
-    TabFader:SetScript("OnUpdate", function(self, elapsed)
+    TabFader:SetScript("OnUpdate", function(_, elapsed)
         local targetAlpha = 1
         if ns.db.chatAutoFadeTabs then
             local isOver = false
@@ -557,10 +555,10 @@ function ChatEngine:OnEnable()
 
     local MemoryLoader = CreateFrame("Frame")
     local waitFrames = 15
-    MemoryLoader:SetScript("OnUpdate", function(self)
+    MemoryLoader:SetScript("OnUpdate", function(loaderFrame)
         waitFrames = waitFrames - 1
         if waitFrames <= 0 then
-            self:SetScript("OnUpdate", nil)
+            loaderFrame:SetScript("OnUpdate", nil)
             ChatEngine:UpdateSettings()
             ns.RenderTabs()
             ns.RefreshChatDisplay()
@@ -569,7 +567,9 @@ function ChatEngine:OnEnable()
         end
     end)
 
-    local editBox = ChatFrame1EditBox
+    ---@class ValorianEditBox : EditBox
+    ---@field ValorianBG Frame
+    local editBox = ChatFrame1EditBox ---@type ValorianEditBox|any
     if editBox then
         editBox:SetParent(UIParent)
         editBox:ClearAllPoints()
@@ -613,7 +613,7 @@ function ChatEngine:OnEnable()
         local historyIndex = #cmdHistory
         local draftText = ""
 
-        hooksecurefunc(editBox, "AddHistoryLine", function(self, text)
+        hooksecurefunc(editBox, "AddHistoryLine", function(_, text)
             if #cmdHistory == 0 or cmdHistory[#cmdHistory] ~= text then
                 table.insert(cmdHistory, text)
                 if #cmdHistory > 200 then table.remove(cmdHistory, 1) end
@@ -621,22 +621,22 @@ function ChatEngine:OnEnable()
             historyIndex = #cmdHistory
         end)
 
-        editBox:HookScript("OnKeyDown", function(self, key)
+        editBox:HookScript("OnKeyDown", function(eb, key)
             if key == "UP" then
-                if historyIndex == #cmdHistory then draftText = self:GetText() end
+                if historyIndex == #cmdHistory then draftText = eb:GetText() end
                 if historyIndex > 0 then
-                    self:SetText(cmdHistory[historyIndex]); historyIndex = historyIndex - 1
+                    eb:SetText(cmdHistory[historyIndex]); historyIndex = historyIndex - 1
                 end
             elseif key == "DOWN" then
                 if historyIndex < #cmdHistory - 1 then
-                    historyIndex = historyIndex + 1; self:SetText(cmdHistory[historyIndex + 1])
+                    historyIndex = historyIndex + 1; eb:SetText(cmdHistory[historyIndex + 1])
                 elseif historyIndex == #cmdHistory - 1 then
-                    historyIndex = #cmdHistory; self:SetText(draftText)
+                    historyIndex = #cmdHistory; eb:SetText(draftText)
                 end
             end
         end)
 
-        editBox:HookScript("OnEditFocusLost", function(self)
+        editBox:HookScript("OnEditFocusLost", function()
             historyIndex = #cmdHistory; draftText = ""
         end)
     end
@@ -650,8 +650,8 @@ function ChatEngine:OnEnable()
     for _, event in ipairs(chatEvents) do ChatListener:RegisterEvent(event) end
 
     ChatListener:SetScript("OnEvent",
-        function(self, event, text, playerName, language, channelName, playerName2, specialFlags, zoneChannelID,
-                 channelIndex, channelBaseName, languageID, lineID, guid)
+        function(_, event, text, playerName, _, channelName, _, _, _,
+                 channelIndex, _, _, _, guid)
             if not ns.ChatDisplay then return end
 
             event = canaccessvalue(event) and event or ""

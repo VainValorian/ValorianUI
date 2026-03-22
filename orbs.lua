@@ -1,7 +1,7 @@
 -- ==========================================
 -- VALORIAN UI: THE ORB ENGINE
 -- ==========================================
-local addonName, ns = ...
+local _, ns = ...
 local Orbs = ns.Engine:NewModule("Orbs")
 
 -- ==========================================
@@ -222,10 +222,10 @@ local function UpdateHealth()
     local incomingHeal = UnitGetIncomingHeals("player") or 0
     local absorb = UnitGetTotalAbsorbs("player") or 0
 
-    if StatusBar_SetMinMaxSmoothedValue then
-        StatusBar_SetMinMaxSmoothedValue(HealthOrb.fill, 0, maxHealth, health)
-        StatusBar_SetMinMaxSmoothedValue(HealthOrb.healFill, 0, maxHealth, incomingHeal)
-        StatusBar_SetMinMaxSmoothedValue(HealthOrb.absorbFill, 0, maxHealth, absorb)
+    if _G.StatusBar_SetMinMaxSmoothedValue then
+        _G.StatusBar_SetMinMaxSmoothedValue(HealthOrb.fill, 0, maxHealth, health)
+        _G.StatusBar_SetMinMaxSmoothedValue(HealthOrb.healFill, 0, maxHealth, incomingHeal)
+        _G.StatusBar_SetMinMaxSmoothedValue(HealthOrb.absorbFill, 0, maxHealth, absorb)
     else
         HealthOrb.fill:SetMinMaxValues(0, maxHealth)
         HealthOrb.fill:SetValue(health)
@@ -234,6 +234,7 @@ local function UpdateHealth()
         HealthOrb.absorbFill:SetMinMaxValues(0, maxHealth)
         HealthOrb.absorbFill:SetValue(absorb)
     end
+
 
     if ns.db.showOrbText == false then
         HealthOrb.text:Hide()
@@ -250,8 +251,8 @@ local function UpdatePower()
     local power = UnitPower("player", powerType) or 0
     local maxPower = UnitPowerMax("player", powerType) or 1
 
-    if StatusBar_SetMinMaxSmoothedValue then
-        StatusBar_SetMinMaxSmoothedValue(PowerOrb.fill, 0, maxPower, power)
+    if _G.StatusBar_SetMinMaxSmoothedValue then
+        _G.StatusBar_SetMinMaxSmoothedValue(PowerOrb.fill, 0, maxPower, power)
     else
         PowerOrb.fill:SetMinMaxValues(0, maxPower)
         PowerOrb.fill:SetValue(power)
@@ -379,16 +380,8 @@ local function UpdateAuraPower()
         if aura then
             current = (aura.applications and aura.applications > 0) and aura.applications or 1
         end
-    else
-        for i = 1, 40 do
-            local name, _, count, _, _, _, _, _, _, spellId = UnitAura("player", i, "HELPFUL")
-            if not name then break end
-            if spellId == activeAuraID then
-                current = (count and count > 0) and count or 1
-                break
-            end
-        end
     end
+
 
     local isApex = (current == activeMax and activeMax > 0 and InCombatLockdown())
 
@@ -458,7 +451,7 @@ RuneUpdater:SetScript("OnUpdate", function()
 
     local readyCount = 0
     for i = 1, activeMax do
-        local start, duration, runeReady = GetRuneCooldown(i)
+        local start, _, runeReady = GetRuneCooldown(i)
         if not start or start == 0 or runeReady then
             readyCount = readyCount + 1
         end
@@ -496,9 +489,9 @@ function Orbs:OnInit()
     HealthOrb = CreateOrb("ValorianUIHealthOrb", -300, 150, 0.8, 0.1, 0.1, PATH_ANGEL_HEALTH, -94, 25, true)
     PowerOrb = CreateOrb("ValorianUIPowerOrb", 300, 150, 0.1, 0.3, 0.8, PATH_ANGEL_POWER, 90, -3, false)
 
-    HealthOrb:SetScript("OnEnter", function(self)
+    HealthOrb:SetScript("OnEnter", function(orb)
         if ValUI_FramesUnlocked then return end
-        GameTooltip_SetDefaultAnchor(GameTooltip, self)
+        GameTooltip_SetDefaultAnchor(GameTooltip, orb)
         GameTooltip:SetUnit("player")
         GameTooltip:Show()
     end)
@@ -521,16 +514,17 @@ function Orbs:OnInit()
     if ValUI_FramesUnlocked then MicroContainer.dragOverlay:Show() end
     MicroContainer:RegisterForDrag("LeftButton")
 
-    MicroContainer:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    MicroContainer:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local centerX = self:GetCenter()
+    MicroContainer:SetScript("OnDragStart", function(mc) mc:StartMoving() end)
+    MicroContainer:SetScript("OnDragStop", function(mc)
+        mc:StopMovingOrSizing()
+        local centerX = mc:GetCenter()
         local parentX = UIParent:GetCenter()
         ns.db.Runes_X = centerX - parentX
-        ns.db.Runes_Y = self:GetBottom()
-        self:ClearAllPoints()
-        self:SetPoint("BOTTOM", UIParent, "BOTTOM", ns.db.Runes_X, ns.db.Runes_Y)
+        ns.db.Runes_Y = mc:GetBottom()
+        mc:ClearAllPoints()
+        mc:SetPoint("BOTTOM", UIParent, "BOTTOM", ns.db.Runes_X, ns.db.Runes_Y)
     end)
+
 
     for i = 1, MAX_MICROS do
         local r = CreateFrame("Frame", "ValorianUIMicro" .. i, MicroContainer)
@@ -603,7 +597,7 @@ function Orbs:OnEnable()
     self.EventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     self.EventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 
-    self.EventFrame:SetScript("OnEvent", function(_, event, unit)
+    self.EventFrame:SetScript("OnEvent", function(_, event, eventUnit)
         if event == "PLAYER_SPECIALIZATION_CHANGED" then
             C_Timer.After(0.5, RefreshMicroLayout)
         elseif event == "PLAYER_REGEN_DISABLED" then
@@ -626,7 +620,7 @@ function Orbs:OnEnable()
             elseif activeType ~= "RUNES" then
                 UpdateStandardPower()
             end
-        elseif unit == "player" then
+        elseif eventUnit == "player" then
             if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" then
                 UpdateHealth()
             elseif event == "UNIT_MAXPOWER" then

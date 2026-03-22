@@ -1,7 +1,7 @@
 -- ==========================================
 -- VALORIAN UI: MIDNIGHT DAMAGE METER SKIN
 -- ==========================================
-local addonName, ns = ...
+local _, ns = ...
 local DamageMeter = ns.Engine:NewModule("DamageMeter")
 
 local PATH_CLASS_ICONS = "Interface\\AddOns\\ValorianUI\\Media\\ClassIcons.tga"
@@ -76,22 +76,22 @@ local function SkinMeterBars(parent)
                 if actualIconTexture then
                     -- 1. Atlas & Texture Hijack
                     if not actualIconTexture.isValorianAtlasHooked then
-                        local function HandleValorianIcon(self)
-                            if self.ignoreValorian then return end
+                        local function HandleValorianIcon(icon)
+                            if icon.ignoreValorian then return end
 
                             if ns.db.meterCustomIcons ~= false then
                                 local classKey = row.classFilename
                                 if classKey and ValorianAtlasMap[classKey] then
-                                    self.ignoreValorian = true
-                                    self:SetTexture(PATH_CLASS_ICONS)
+                                    icon.ignoreValorian = true
+                                    icon:SetTexture(PATH_CLASS_ICONS)
                                     local c = ValorianAtlasMap[classKey]
-                                    self:SetTexCoord(c[1], c[2], c[3], c[4])
-                                    self.ignoreValorian = false
+                                    icon:SetTexCoord(c[1], c[2], c[3], c[4])
+                                    icon.ignoreValorian = false
                                 end
                             else
-                                self.ignoreValorian = true
-                                self:SetTexCoord(0, 1, 0, 1)
-                                self.ignoreValorian = false
+                                icon.ignoreValorian = true
+                                icon:SetTexCoord(0, 1, 0, 1)
+                                icon.ignoreValorian = false
                             end
                         end
 
@@ -150,11 +150,11 @@ local function SkinMeterBars(parent)
             if not child.isValorianSkinned then
                 child:SetStatusBarTexture(safeTex)
 
-                hooksecurefunc(child, "SetStatusBarTexture", function(self, tex)
-                    if self.ignoreTextureHook then return end
-                    self.ignoreTextureHook = true
-                    self:SetStatusBarTexture(safeTex)
-                    self.ignoreTextureHook = false
+                hooksecurefunc(child, "SetStatusBarTexture", function(bar, _)
+                    if bar.ignoreTextureHook then return end
+                    bar.ignoreTextureHook = true
+                    bar:SetStatusBarTexture(safeTex)
+                    bar.ignoreTextureHook = false
                 end)
 
                 for rIdx = 1, child:GetNumRegions() do
@@ -204,11 +204,11 @@ local function SecureHeaderText(fontString)
     if ns.db.enableDMSkinning == false then return end
     if not fontString or fontString.isValorianHookedText then return end
 
-    hooksecurefunc(fontString, "SetTextColor", function(self)
-        if self.ignoreColorHook then return end
-        self.ignoreColorHook = true
-        self:SetTextColor(0.8, 0.8, 0.8, 1)
-        self.ignoreColorHook = false
+    hooksecurefunc(fontString, "SetTextColor", function(fs)
+        if fs.ignoreColorHook then return end
+        fs.ignoreColorHook = true
+        fs:SetTextColor(0.8, 0.8, 0.8, 1)
+        fs.ignoreColorHook = false
     end)
 
     fontString.ignoreColorHook = true
@@ -224,18 +224,18 @@ end
 -- 3. MASTER FRAME SKINNING
 -- ==========================================
 local function SkinMeterFrame()
-    local dm = DamageMeterSessionWindow1
+    local dm = _G.DamageMeterSessionWindow1
     if not dm then return end
 
     if not dm.isValorianSkinned then
         if dm.NineSlice then dm.NineSlice:SetAlpha(0) end
 
         if dm.Background then
-            hooksecurefunc(dm.Background, "SetVertexColor", function(self, r, g, b, a)
-                if self.ignoreColorHook then return end
-                self.ignoreColorHook = true
-                self:SetVertexColor(0, 0, 0, a)
-                self.ignoreColorHook = false
+            hooksecurefunc(dm.Background, "SetVertexColor", function(bg, _, _, _, a)
+                if bg.ignoreColorHook then return end
+                bg.ignoreColorHook = true
+                bg:SetVertexColor(0, 0, 0, a)
+                bg.ignoreColorHook = false
             end)
 
             local _, _, _, a = dm.Background:GetVertexColor()
@@ -286,12 +286,12 @@ end
 -- ==========================================
 local function HandleHeaderHover()
     if ns.db.enableDMSkinning == false then return end
-    local dm = DamageMeterSessionWindow1
+    local dm = _G.DamageMeterSessionWindow1
     if not dm then return end
 
     local isHovered = dm:IsMouseOver()
-    if DropDownList1 and DropDownList1:IsShown() and DropDownList1:IsMouseOver() then isHovered = true end
-    if DropDownList2 and DropDownList2:IsShown() and DropDownList2:IsMouseOver() then isHovered = true end
+    if _G.DropDownList1 and _G.DropDownList1:IsShown() and _G.DropDownList1:IsMouseOver() then isHovered = true end
+    if _G.DropDownList2 and _G.DropDownList2:IsShown() and _G.DropDownList2:IsMouseOver() then isHovered = true end
 
     if dm.currentHeaderState ~= isHovered then
         local function ToggleElement(el, state)
@@ -326,13 +326,14 @@ function DamageMeter:OnEnable()
 
         timer = timer + elapsed
         if timer > 0.5 then
-            if DamageMeterSessionWindow1 and DamageMeterSessionWindow1:IsShown() then
+            local dmWindow = _G.DamageMeterSessionWindow1
+            if dmWindow and dmWindow:IsShown() then
                 SkinMeterFrame()
                 -- VALORIAN FIX: CPU Leak Optimization (Child Count Lock)
-                local currentChildren = DamageMeterSessionWindow1:GetNumChildren()
-                if DamageMeterSessionWindow1.lastChildCount ~= currentChildren then
-                    SkinMeterBars(DamageMeterSessionWindow1)
-                    DamageMeterSessionWindow1.lastChildCount = currentChildren
+                local currentChildren = dmWindow:GetNumChildren()
+                if dmWindow.lastChildCount ~= currentChildren then
+                    SkinMeterBars(dmWindow)
+                    dmWindow.lastChildCount = currentChildren
                 end
             end
             timer = 0
