@@ -1,7 +1,7 @@
 -- ==========================================
 -- VALORIAN UI: TOOLTIPS ENGINE
 -- ==========================================
-local addonName, ns = ...
+local _, ns = ...
 local Tooltips = ns.Engine:NewModule("Tooltips")
 
 local issecretvalue = issecretvalue or function() return false end
@@ -17,7 +17,7 @@ local currentInspectGUID = nil
 
 local inspectFrame = CreateFrame("Frame")
 inspectFrame:RegisterEvent("INSPECT_READY")
-inspectFrame:SetScript("OnEvent", function(self, event, guid)
+inspectFrame:SetScript("OnEvent", function(_, _, guid)
     if currentInspectGUID and canaccessvalue(guid) and currentInspectGUID == guid then
         local unit = "mouseover"
 
@@ -139,7 +139,7 @@ local function SkinTooltip(tt)
 
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
     local borderPath = (LSM and LSM:Fetch("border", ns.db.tooltipBorderTexture or "Blizzard Tooltip")) or
-    "Interface\\Tooltips\\UI-Tooltip-Border"
+        "Interface\\Tooltips\\UI-Tooltip-Border"
 
     ApplySafeBackdrop(bg, borderPath, 14, ns.db.tooltipBgAlpha or 0.95, 3)
 
@@ -175,19 +175,25 @@ local function SkinTooltip(tt)
     if not tt:IsShown() then bg:Hide() end
 end
 
+---@class ValorianTooltipStatusBar : StatusBar
+---@field ValorianBG Frame
+---@field isValorianSkinned boolean
+---@field ignoreTexture boolean
+
 local function SkinTooltipStatusBar()
+    ---@type ValorianTooltipStatusBar
     local bar = GameTooltipStatusBar
     if not bar or bar.isValorianSkinned then return end
 
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
     local texPath = (LSM and LSM:Fetch("statusbar", ns.db.tooltipBarTexture or "Minimalist")) or
-    "Interface\\TargetingFrame\\UI-StatusBar"
+        "Interface\\TargetingFrame\\UI-StatusBar"
 
     bar:SetStatusBarTexture(texPath)
     local tex = bar:GetStatusBarTexture()
     if tex then tex:SetDesaturated(true) end
 
-    hooksecurefunc(bar, "SetStatusBarTexture", function(self, texture)
+    hooksecurefunc(bar, "SetStatusBarTexture", function(self, _)
         if self.ignoreTexture then return end
         self.ignoreTexture = true
         self:SetStatusBarTexture(texPath)
@@ -204,7 +210,7 @@ local function SkinTooltipStatusBar()
     bg:SetFrameLevel(math.max(0, bar:GetFrameLevel() - 1))
 
     local borderPath = (LSM and LSM:Fetch("border", ns.db.tooltipBorderTexture or "Blizzard Tooltip")) or
-    "Interface\\Tooltips\\UI-Tooltip-Border"
+        "Interface\\Tooltips\\UI-Tooltip-Border"
 
     ApplySafeBackdrop(bg, borderPath, 10, 0, 0)
 
@@ -298,7 +304,7 @@ local function ProcessTooltipData(tooltip, data)
             local guildStr = _G["GameTooltipTextLeft2"]
             if guildStr then
                 guildStr:SetText("|cff" ..
-                guildHex .. "<" .. guildName .. ">|r |cff" .. rankHex .. (guildRank or "") .. "|r")
+                    guildHex .. "<" .. guildName .. ">|r |cff" .. rankHex .. (guildRank or "") .. "|r")
             end
         end
     else
@@ -394,19 +400,19 @@ function Tooltips:OnInit()
     anchor:SetMovable(true)
     anchor:RegisterForDrag("LeftButton")
 
-    anchor:SetScript("OnDragStart", function(self)
-        if ValUI_FramesUnlocked then self:StartMoving() end
+    anchor:SetScript("OnDragStart", function(f)
+        if ValUI_FramesUnlocked then f:StartMoving() end
     end)
-    anchor:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local p, _, rp, x, y = self:GetPoint()
+    anchor:SetScript("OnDragStop", function(f)
+        f:StopMovingOrSizing()
+        local p, _, rp, x, y = f:GetPoint()
         if not ns.db.frames then ns.db.frames = {} end
         ns.db.frames["ValorianUI_TooltipAnchor"] = {
             point = p,
             relativePoint = rp,
             x = x,
             y = y,
-            scale = self:GetScale() or 1
+            scale = f:GetScale() or 1
         }
     end)
 
@@ -426,23 +432,28 @@ function Tooltips:OnEnable()
         self.Anchor:SetPoint(db.point, UIParent, db.relativePoint or db.point, db.x, db.y)
     end
 
-    hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
-        if ns.db.tooltipAnchorCursor then
-            tooltip:SetOwner(parent, "ANCHOR_CURSOR")
-        else
-            tooltip:SetOwner(parent, "ANCHOR_NONE")
-            tooltip:ClearAllPoints()
+    hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, _)
+        if not tooltip or tooltip:IsForbidden() or tooltip.IsEmbedded then return end
+        if tooltip ~= GameTooltip then return end
 
+        tooltip:ClearAllPoints()
+
+        if ns.db.tooltipAnchorCursor then
+            local x, y = GetCursorPosition()
+            local ttScale = tooltip:GetEffectiveScale()
+
+            if canaccessvalue(ttScale) and ttScale > 0 and canaccessvalue(x) and canaccessvalue(y) then
+                tooltip:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", (x / ttScale) + 15, (y / ttScale) - 15)
+            end
+        else
             local right = self.Anchor:GetRight()
             local bottom = self.Anchor:GetBottom()
+            local anchorScale = self.Anchor:GetEffectiveScale()
+            local ttScale = tooltip:GetEffectiveScale()
 
-            if right and bottom then
-                local anchorScale = self.Anchor:GetEffectiveScale()
+            if canaccessvalue(right) and canaccessvalue(bottom) and canaccessvalue(anchorScale) and canaccessvalue(ttScale) and ttScale > 0 then
                 local trueRight = right * anchorScale
                 local trueBottom = bottom * anchorScale
-
-                local ttScale = tooltip:GetEffectiveScale()
-
                 tooltip:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", trueRight / ttScale, trueBottom / ttScale)
             else
                 tooltip:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -40, 40)

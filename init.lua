@@ -34,6 +34,8 @@ local defaultSettings = {
     enableUFSkinning = true,
     enableDMSkinning = true,
     enableSBSkinning = true,
+    enableActionBarsSkinning = true,
+    enableAurasSkinning = true,
     showOrbText = true,
     fontChoice = "Friz Quadrata TT",
     meterBarTexture = "Minimalist",
@@ -98,9 +100,8 @@ ns.Engine:SetScript("OnEvent", function(self, event, ...)
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
         if loadedAddon == addonName then
-            
             ValorianUIDB = ValorianUIDB or {}
-            
+
             if type(ValorianUIDB.global) ~= "table" then
                 local legacyData = {}
                 for k, v in pairs(ValorianUIDB) do
@@ -109,13 +110,13 @@ ns.Engine:SetScript("OnEvent", function(self, event, ...)
                 end
                 ValorianUIDB.global = legacyData
             end
-            
+
             ValorianUIDB.global = ValorianUIDB.global or {}
             ValorianUIDB.profiles = ValorianUIDB.profiles or {}
             ValorianUIDB.useProfile = ValorianUIDB.useProfile or {}
 
             ns.charKey = UnitName("player") .. " - " .. GetRealmName()
-            
+
             if ValorianUIDB.useProfile[ns.charKey] then
                 ValorianUIDB.profiles[ns.charKey] = ValorianUIDB.profiles[ns.charKey] or {}
                 ns.db = CopyDefaults(defaultSettings, ValorianUIDB.profiles[ns.charKey])
@@ -124,7 +125,7 @@ ns.Engine:SetScript("OnEvent", function(self, event, ...)
                 ns.db = CopyDefaults(defaultSettings, ValorianUIDB.global)
                 ns.dbType = "global"
             end
-            
+
             for _, module in pairs(ns.Modules) do
                 if type(module.OnInit) == "function" then
                     module:OnInit()
@@ -133,7 +134,7 @@ ns.Engine:SetScript("OnEvent", function(self, event, ...)
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
         local isInitialLogin, isReloadingUI = ...
-        
+
         for _, module in pairs(ns.Modules) do
             if type(module.OnEnable) == "function" then
                 module:OnEnable(isInitialLogin, isReloadingUI)

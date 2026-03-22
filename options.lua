@@ -360,6 +360,11 @@ function Options:BuildGeneralSettings(parentCategory)
     UI.AddCheckbox(canvas, "Show Orb Numerical Text", "showOrbText", true, 20, y)
     UI.AddCheckbox(canvas, "Enable Minimap Drawer (Reload)", "showMinimapDrawer", true, 300, y, nil,
         function() print("|cff888888ValorianUI:|r Please type /reload to apply.") end)
+    y = y - 30
+    UI.AddCheckbox(canvas, "Action Bars Skinning (Reload)", "enableActionBarsSkinning", true, 20, y, nil,
+        function() print("|cff888888ValorianUI:|r Please type /reload to apply.") end)
+    UI.AddCheckbox(canvas, "Auras Skinning (Reload)", "enableAurasSkinning", true, 300, y, nil,
+        function() print("|cff888888ValorianUI:|r Please type /reload to apply.") end)
     y = y - 40
 
     y = UI.AddSubHeader(canvas, "Art Scaling", y)
